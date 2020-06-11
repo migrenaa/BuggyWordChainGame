@@ -3,6 +3,7 @@
 namespace WordChainGame.Services.Services.Words
 {
     using System.Linq;
+    using WordChainGame.Common.CustomExceptions;
     using WordChainGame.Services.UnitOfWork;
     public class WordService : IWordService
     {
@@ -37,6 +38,11 @@ namespace WordChainGame.Services.Services.Words
                                                  .Get(filter: r => r.InappropriateWordId == wordId,
                                                       includeProperties: "InappropriateWord.Topic")
                                                  .ToList();
+
+            if (inappropriateRequest.Count == 0)
+            {
+                throw new InvalidWordException($"There are no inappropriate word requests for this word.");
+            }
 
             for (int i = 0; i < inappropriateRequest.Count(); i++)
             {

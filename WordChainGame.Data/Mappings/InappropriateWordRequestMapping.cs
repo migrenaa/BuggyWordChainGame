@@ -7,8 +7,8 @@ namespace WordChainGame.Data.Mappings
     public class InappropriateWordRequestMapping : EntityTypeConfiguration<InappropriateWordRequest>
     {
         public InappropriateWordRequestMapping()
-        {
-            this.ToTable("InappropriateWordRequestMappings");
+        { 
+            this.ToTable("InappropriateWordRequests");
 
             this.HasKey(p => p.Id);
 

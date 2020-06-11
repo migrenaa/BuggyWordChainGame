@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomExceptions\InvalidTopicException.cs" />
     <Compile Include="CustomExceptions\InvalidWordException.cs" />
     <Compile Include="Enumerations\UserRole.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

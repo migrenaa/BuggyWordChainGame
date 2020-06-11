@@ -6,6 +6,7 @@ namespace WordChainGame.Services.Services
 
     public interface ITopicService
     {
+        DetailsTopicResponseModel Create(TopicRequestModel model, string authorId);
         PaginatedTopicsResponseModel Get(string orderBy, int top, int skip);
         PaginatedWordsResponseModel GetWords(int topicId, int top, int skip);
         ListedWordResponseModel AddWord(int topicId, string userId, WordRequestModel model);

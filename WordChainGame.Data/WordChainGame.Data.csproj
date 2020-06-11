@@ -77,6 +77,10 @@
     <Compile Include="Migrations\201802042132061_AddedIsDeletedInWords.Designer.cs">
       <DependentUpon>201802042132061_AddedIsDeletedInWords.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202006111536005_RenameInappropriateWordRequestTable.cs" />
+    <Compile Include="Migrations\202006111536005_RenameInappropriateWordRequestTable.Designer.cs">
+      <DependentUpon>202006111536005_RenameInappropriateWordRequestTable.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -96,6 +100,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201802042132061_AddedIsDeletedInWords.resx">
       <DependentUpon>201802042132061_AddedIsDeletedInWords.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202006111536005_RenameInappropriateWordRequestTable.resx">
+      <DependentUpon>202006111536005_RenameInappropriateWordRequestTable.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

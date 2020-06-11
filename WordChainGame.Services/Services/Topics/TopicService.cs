@@ -1,6 +1,7 @@
 ﻿namespace WordChainGame.Services.Services
 {
     using AutoMapper;
+    using Microsoft.AspNet.Identity;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -21,6 +22,25 @@
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
         }
+        public DetailsTopicResponseModel Create(TopicRequestModel model, string authorId)
+        {
+            var topic = mapper.Map<Topic>(model);
+            topic.AuthorId = authorId;
+            topic.WordsCount = 0; 
+            foreach(var oldTopic in unitOfWork.Topics.Get().ToList())
+            {
+                if(oldTopic.Name == topic.Name)
+                {
+                    throw new InvalidTopicException(string.Format("$The topic {0} already exists.", topic.Name));
+                }
+            }
+
+            var added = unitOfWork.Topics.Insert(topic);
+
+            unitOfWork.Commit();
+
+            return  mapper.Map<DetailsTopicResponseModel>(added);
+        }
         public PaginatedTopicsResponseModel Get(string orderBy, int top, int skip)
         {
             var topics = new List<Topic>();
@@ -38,28 +58,29 @@
             }
 
             var count = topics.Count;
-            var paginatedTopics = topics.Skip(skip).Take(top);
+            var paginatedTopics = topics.Take(top).Skip(skip);
             var response = new PaginatedTopicsResponseModel
             {
                 Topics = this.mapper.Map<ICollection<ListedTopicResponseModel>>(paginatedTopics),
-                Count = count,
-                NextPageUrl = top + skip > count ? null : string.Format("api/topics?orderby={0}&top={1}&skip={2}", orderBy, top + skip, top),
-                PreviousPageUrl = skip - top < 0 ? null : string.Format("api/topics?orderby={0}&top={1}&skip={2}", orderBy, skip - top, top),
+                Count = count, 
+                NextPageUrl = top + (top - skip) > count ? null : string.Format("api/topics?orderby={0}&top={1}&skip={2}", orderBy, top + (top - skip), skip + (top - skip)),
+                PreviousPageUrl = skip - (top - skip) < 0 ? null : string.Format("api/topics?orderby={0}&top={1}&skip={2}", orderBy, top - (top - skip), skip - (top - skip)),
+
             };
             return response;
         }
 
         public PaginatedWordsResponseModel GetWords(int topicId, int top, int skip)
         {
-            var words = unitOfWork.Words.Get(x => x.TopicId == topicId, includeProperties: "Author");
+            var words = unitOfWork.Words.Get(x => x.TopicId == topicId && !x.IsDeleted, includeProperties: "Topic.Author");
             var count = words.Count();
-            var paginatedWords = words.Skip(skip).Take(top);
+            var paginatedWords = words.Take(top).Skip(skip); 
             var response = new PaginatedWordsResponseModel
             {
                 Words = mapper.Map<ICollection<ListedWordResponseModel>>(paginatedWords),
-                Count = count,
-                NextPageUrl = top + skip > count ? null : string.Format("api/topics/{0}/words&top={1}&skip={2}", topicId, top + skip, top),
-                PreviousPageUrl = skip - top < 0 ? null : string.Format("api/topics/{0}/words&top={1}&skip={2}", topicId, skip - top, top),
+                Count = words.Count(),
+                NextPageUrl = top + (top - skip) > count ? null : string.Format("api/topics/{0}/words&top={1}&skip={2}", topicId, top + (top - skip), skip + (top - skip)),
+                PreviousPageUrl = skip - (top - skip) < 0 ? null : string.Format("api/topics/{0}/words&top={1}&skip={2}", topicId, top - (top - skip), skip - (top - skip))
             };
             return response;
         }
@@ -68,7 +89,7 @@
         {
             var topic = unitOfWork.Topics
                                   .Get(filter: t => t.Id == topicId,
-                                       includeProperties: "Words")
+                                       includeProperties: "Words, Author")
                                   .SingleOrDefault();
 
             var lastWord = topic.Words.OrderBy(w => w.DateCreated)
@@ -76,7 +97,7 @@
 
             if(lastWord != null)
             {
-                var lastWordLastCharachter = lastWord.WordContent.First().ToString();
+                var lastWordLastCharachter = lastWord.WordContent.Last().ToString().ToLower();
 
                 if (topic.Words.Where(w => !w.IsDeleted).Select(w => w.WordContent).Contains(model.Word))
                 {
@@ -86,12 +107,12 @@
 
                 if (topic.Words.Where(w => w.IsDeleted).Select(w => w.WordContent).Contains(model.Word))
                 {
-                    throw new Exception($"The word is already marked as inappropriate in this topic.");
+                    throw new InvalidWordException($"The word is already marked as inappropriate in this topic.");
                 }
 
-                if (!model.Word.StartsWith(lastWordLastCharachter))
+                if (!model.Word.ToLower().StartsWith(lastWordLastCharachter))
                 {
-                    throw new InvalidWordException($"The new word should start with {lastWordLastCharachter}.");
+                    throw new InvalidWordException($"The new word should start with {lastWordLastCharachter.ToUpper()}.");
                 }
             }
            
@@ -103,7 +124,7 @@
             unitOfWork.Words.Insert(word);
             topic.WordsCount++;
 
-            unitOfWork.Commit();
+            unitOfWork.Commit(); 
 
             return mapper.Map<ListedWordResponseModel>(word);
 
@@ -111,6 +132,11 @@
 
         public void RequestWordAsInappropriate(string requesterId, int topicId, int wordId)
         {
+            if (unitOfWork.Words.GetByID(wordId).AuthorId == requesterId)
+            {
+                throw new InvalidWordException($"Users cannot make inappropriate word requests for their own words.");
+            }
+
             var inappropriateWordRequest = new InappropriateWordRequest
             {
                 DateCreated = DateTime.Now,

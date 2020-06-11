@@ -63,14 +63,15 @@ namespace WordChainGame.Web.Controllers
             {
                 return BadRequest(ModelState);
             }
+            try
+            {
+            var added = topics.Create(model, User.Identity.GetUserId());
+            return Ok(added);
 
-            var topic = this.mapper.Map<Topic>(model);
-            topic.AuthorId = User.Identity.GetUserId();
-            topic.WordsCount = 0;
-
-            var added = this.unitOfWork.Topics.Insert(topic);
-            this.unitOfWork.Commit();
-            return Ok(this.mapper.Map<DetailsTopicResponseModel>(added));
+            } catch (InvalidTopicException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
 
@@ -148,7 +149,14 @@ namespace WordChainGame.Web.Controllers
             }
 
             string authorId = User.Identity.GetUserId();
+
+            try
+            {
             this.topics.RequestWordAsInappropriate(authorId, topicId, wordId);
+            } catch (InvalidWordException ex)
+            {
+                return  BadRequest(ex.Message);
+            }
             return Ok();
         }
     }
