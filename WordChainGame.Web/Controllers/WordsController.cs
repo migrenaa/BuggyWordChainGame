@@ -41,7 +41,7 @@ namespace WordChainGame.Web.Controllers
         {
             var requests = unitOfWork.InappropriateWordRequests
                                      .Get(filter: r => r.IsInappropriate == null,
-                                          includeProperties: "Requester, InappropriateWord.Topic");
+                                          includeProperties: "Requester, InappropriateWord.Topic, InappropriateWord.Author");
 
             var paginatedRequests = requests.Take(top).Skip(skip);
             int count = requests.Count();
