@@ -8,7 +8,7 @@ namespace WordChainGame.Data.Mappings
     {
         public InappropriateWordRequestMapping()
         { 
-            this.ToTable("InappropriateWordRequestMappings");
+            this.ToTable("InappropriateWordRequests");
 
             this.HasKey(p => p.Id);
 
