@@ -48,8 +48,7 @@ namespace WordChainGame.Web.Controllers
         [Route("Logout")]
         public async Task<IHttpActionResult> Logout()
         {
-            Authentication.SignOut();
-            await UserManager.UpdateSecurityStampAsync(User.Identity.GetUserId());
+            Authentication.SignOut(DefaultAuthenticationTypes.ApplicationCookie); 
             return Ok();
         }
         
