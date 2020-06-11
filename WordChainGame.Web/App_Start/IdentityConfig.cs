@@ -2,6 +2,8 @@
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
+using System.Linq;
+using System.Threading.Tasks;
 using WordChainGame.Data.Entities;
 using WordChainGame.Data.Model;
 
@@ -23,16 +25,17 @@ namespace WordChainGame.Web
             manager.UserValidator = new UserValidator<User>(manager)
             {
                 AllowOnlyAlphanumericUserNames = true,
-                RequireUniqueEmail = false,
+                RequireUniqueEmail = true
             };
             // Configure validation logic for passwords
-            manager.PasswordValidator = new PasswordValidator
+            manager.PasswordValidator = new CustomPasswordValidator
             {
                 RequiredLength = 6,
                 RequireNonLetterOrDigit = true,
                 RequireDigit = true,
                 RequireLowercase = false,
                 RequireUppercase = false,
+                MaxLength = 20
             };
             var dataProtectionProvider = options.DataProtectionProvider;
             if (dataProtectionProvider != null)
@@ -57,5 +60,26 @@ namespace WordChainGame.Web
             return appRoleManager;
         }
 
+    }
+
+    public class CustomPasswordValidator : PasswordValidator
+    {
+        public int MaxLength { get; set; }
+
+        public override async Task<IdentityResult> ValidateAsync(string item)
+        {
+            IdentityResult result = await base.ValidateAsync(item);
+
+            var errors = result.Errors.ToList();
+
+            if (string.IsNullOrEmpty(item) || item.Length > MaxLength)
+            {
+                errors.Add(string.Format("Password length can't exceed {0}", MaxLength));
+            }
+
+            return await Task.FromResult(!errors.Any()
+             ? IdentityResult.Success
+             : IdentityResult.Failed(errors.ToArray()));
+        }
     }
 }

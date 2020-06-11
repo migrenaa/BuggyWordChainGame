@@ -46,9 +46,10 @@ namespace WordChainGame.Web.Controllers
             
         // POST api/Account/Logout
         [Route("Logout")]
-        public IHttpActionResult Logout()
+        public async Task<IHttpActionResult> Logout()
         {
-            Authentication.SignOut(CookieAuthenticationDefaults.AuthenticationType);
+            Authentication.SignOut();
+            await UserManager.UpdateSecurityStampAsync(User.Identity.GetUserId());
             return Ok();
         }
         
@@ -60,6 +61,7 @@ namespace WordChainGame.Web.Controllers
         /// <returns></returns>
         [Authorize]
         [HttpDelete]
+        [Route("")]
         public async Task<IHttpActionResult> DeleteAccount(string password)
         {
             var userId = User.Identity.GetUserId();
@@ -77,14 +79,14 @@ namespace WordChainGame.Web.Controllers
                 return Unauthorized();
             }
 
+            users.DeleteUserEntities(userId);
+
             var result = await UserManager.DeleteAsync(user);
 
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
             }
-
-            users.DeleteUserEntities(userId);
 
             return Ok();
 

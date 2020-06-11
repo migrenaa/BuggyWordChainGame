@@ -33,7 +33,7 @@ namespace WordChainGame.Web.Models
         public string UserName { get; set; }
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 5)]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
         public string Password { get; set; }
@@ -43,7 +43,9 @@ namespace WordChainGame.Web.Models
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
 
-        [DataType(DataType.EmailAddress)]
+        [Required]
+        [Display(Name = "Email")]
+        [EmailAddress(ErrorMessage = "Not a valid email")]
         public string Email { get; set; }
         public string FullName { get; set; }
 

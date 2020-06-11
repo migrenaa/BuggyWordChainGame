@@ -8,6 +8,7 @@ namespace WordChainGame.Web.Controllers
     using System.Linq;
     using System.Net;
     using System.Web.Http;
+    using WordChainGame.Common.CustomExceptions;
     using WordChainGame.DTO.InappropriateWordRequests;
     using WordChainGame.Services.Services.Words;
     using WordChainGame.Services.UnitOfWork;
@@ -42,14 +43,14 @@ namespace WordChainGame.Web.Controllers
                                      .Get(filter: r => r.IsInappropriate == null,
                                           includeProperties: "Requester, InappropriateWord.Topic");
 
-            var paginatedRequests = requests.Skip(skip).Take(top);
+            var paginatedRequests = requests.Take(top).Skip(skip);
             int count = requests.Count();
             var response = new PaginatedInappropriateWordRequests
             {
                 Count = count,
                 InappropriateWordRequests = mapper.Map<ICollection<InappropriateWordRequestsResponseModel>>(paginatedRequests),
-                NextPageUrl = top + skip > count ? null : string.Format("api/words/inappropriate?top={0}&skip={1}", top, top + skip),
-                PreviousPageUrl = skip - top < 0 ? null : string.Format("api/words/inappropriate?top={0}&skip={1}", top, skip - top),
+                NextPageUrl = top + (top - skip) > count ? null : string.Format("api/words/inappropriate?top={0}&skip={1}", top + (top - skip), skip + (top - skip)),
+                PreviousPageUrl = skip - (top - skip) < 0 ? null : string.Format("api/words/inappropriate?top={0}&skip={1}", top - (top - skip), skip - (top - skip)) 
             };
             return Ok(response);
         }
@@ -78,7 +79,13 @@ namespace WordChainGame.Web.Controllers
                 return NotFound();
             }
 
-            words.DeleteInappropriateWordRequestForWord(wordId);
+            try
+            {
+                words.DeleteInappropriateWordRequestForWord(wordId);
+            } catch (InvalidWordException ex)
+            { 
+                return BadRequest(ex.Message);
+            }
 
             return Ok();
         }
